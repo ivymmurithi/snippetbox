@@ -8,15 +8,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/ivymmurithi/snippetbox/pkg/models/mysql"
 	"github.com/joho/godotenv"
+	"github.com/golangcollege/sessions"
 )
 
 type application struct {
 	errorLog 		*log.Logger
 	infoLog 		*log.Logger
+	session 		*sessions.Session
 	snippets 		*mysql.SnippetModel
 	templateCache 	map[string]*template.Template
 }
@@ -27,9 +30,11 @@ func main() {
 			log.Fatal("Error loading .env file")
 	}
 	databasePassword := os.Getenv("DATABASE_PASSWORD")
+	secretKey := os.Getenv("SECRET_KEY")
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	dsn := fmt.Sprintf("web:%s@/snippetbox?parseTime=true", databasePassword)
+	secret := flag.String("secret", fmt.Sprintf("%s", secretKey), "Secret Key")
 	flag.Parse()
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -46,9 +51,13 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+
 	app := &application{
 		errorLog: 		errorLog,
 		infoLog: 		infoLog,
+		session:		session,
 		snippets: 		&mysql.SnippetModel{DB: db},
 		templateCache: 	templateCache,
 	}
