@@ -31,6 +31,8 @@ func main() {
 	}
 	databasePassword := os.Getenv("DATABASE_PASSWORD")
 	secretKey := os.Getenv("SECRET_KEY")
+	sslCertPath := os.Getenv("SSL_CERT_PATH")
+	sslKeyPath := os.Getenv("SSL_KEY_PATH")
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	dsn := fmt.Sprintf("web:%s@/snippetbox?parseTime=true", databasePassword)
@@ -53,6 +55,7 @@ func main() {
 
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
+	session.Secure = true
 
 	app := &application{
 		errorLog: 		errorLog,
@@ -69,7 +72,7 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS(sslCertPath, sslKeyPath)
 	errorLog.Fatal(err)
 }
 
