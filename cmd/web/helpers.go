@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/justinas/nosurf"
+
+	"github.com/ivymmurithi/snippetbox/pkg/models"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -52,6 +54,10 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 	buf.WriteTo(w)
 }
 
-func (app *application) authenticatedUser(r *http.Request) int {
-	return app.session.GetInt(r, "userID")
+func (app *application) authenticatedUser(r *http.Request) *models.User {
+	user, ok := r.Context().Value(contextKeyUser).(*models.User)
+	if !ok {
+		return nil
+	}
+	return user
 }
